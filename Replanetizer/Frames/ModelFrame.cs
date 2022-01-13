@@ -7,10 +7,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
 using ImGuiNET;
 using LibReplanetizer;
+using LibReplanetizer.LevelObjects;
 using LibReplanetizer.Models;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -35,6 +37,45 @@ namespace Replanetizer.Frames
         private List<List<Texture>> selectedModelArmorTexturesSet;
         private List<Texture> selectedTextureSet;
         private List<Texture> modelTextureList;
+        private Selection? _selection;
+
+        public Selection? selection
+        {
+            get => _selection;
+            set
+            {
+                LOGGER.Log(NLog.LogLevel.Debug, "is being set in mv");
+                if (_selection != null)
+                    _selection.CollectionChanged -= SelectionOnCollectionChanged;
+                if (value != null)
+                    value.CollectionChanged += SelectionOnCollectionChanged;
+                _selection = value;
+                UpdateFromSelection();
+            }
+        }
+
+
+
+        private void SelectionOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateFromSelection();
+        }
+
+        private void UpdateFromSelection()
+        {
+            LOGGER.Log(NLog.LogLevel.Debug, "updating in model viewer");
+            if (selection == null)
+                // This shouldn't happen
+                return;
+
+            selection.TryGetOne(out LevelObject? obj);
+
+            if (obj is ModelObject @object)
+            {
+                SelectModel(@object.model);
+            }
+   
+        }
 
         private readonly KeyHeldHandler KEY_HELD_HANDLER = new()
         {
@@ -80,14 +121,13 @@ namespace Replanetizer.Frames
         private int width, height;
         private PropertyFrame propertyFrame;
 
-        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable, Model? model = null) : base(wnd, levelFrame)
+        public ModelFrame(Window wnd, LevelFrame levelFrame, ShaderIDTable shaderIDTable) : base(wnd, levelFrame)
         {
             modelTextureList = new List<Texture>();
             propertyFrame = new PropertyFrame(wnd, listenToCallbacks: true, hideCallbackButton: true);
             this.shaderIDTable = shaderIDTable;
             UpdateWindowSize();
             OnResize();
-            SelectModel(model);
         }
 
         private void RenderModelEntry(Model mod, List<Texture> textureSet, string name)
@@ -115,8 +155,8 @@ namespace Replanetizer.Frames
 
         private void RenderTree()
         {
-            var colW = ImGui.GetColumnWidth() - 10;
-            var childSize = new System.Numerics.Vector2(colW, height);
+            float colW = ImGui.GetColumnWidth() - 10;
+            System.Numerics.Vector2 childSize = new(colW, height);
             if (ImGui.BeginChild("TreeView", childSize, false, ImGuiWindowFlags.AlwaysVerticalScrollbar))
             {
                 RenderSubTree("Moby", level.mobyModels, level.textures);

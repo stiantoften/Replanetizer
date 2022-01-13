@@ -83,6 +83,7 @@ namespace Replanetizer
 
             openFrames.RemoveAll(FrameMustClose);
 
+
             GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             controller.Update(this, (float) e.Time);
 

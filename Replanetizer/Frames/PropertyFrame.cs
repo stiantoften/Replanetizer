@@ -23,6 +23,9 @@ namespace Replanetizer.Frames
     {
         protected sealed override string frameName { get; set; } = "Properties";
 
+        private static readonly NLog.Logger LOGGER = NLog.LogManager.GetCurrentClassLogger();
+
+
         private Selection? _selection;
 
         public Selection? selection
@@ -30,6 +33,7 @@ namespace Replanetizer.Frames
             get => _selection;
             set
             {
+                LOGGER.Log(NLog.LogLevel.Debug, "is being set");
                 if (_selection != null)
                     _selection.CollectionChanged -= SelectionOnCollectionChanged;
                 if (value != null)
@@ -46,6 +50,7 @@ namespace Replanetizer.Frames
             get => _selectedObject;
             set
             {
+                LOGGER.Log(NLog.LogLevel.Debug, "other shit is being set");
                 if (!listenToCallbacks)
                     return;
                 _selectedObject = value;
@@ -83,6 +88,7 @@ namespace Replanetizer.Frames
 
         private void UpdateFromSelection()
         {
+            LOGGER.Log(NLog.LogLevel.Debug, "yaya");
             if (selection == null)
                 // This shouldn't happen
                 return;

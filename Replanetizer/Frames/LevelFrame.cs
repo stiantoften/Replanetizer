@@ -100,6 +100,8 @@ namespace Replanetizer.Frames
 
         private List<Frame> subFrames;
 
+        ModelFrame? modelFrame;
+
         public LevelFrame(Window wnd) : base(wnd)
         {
             subFrames = new List<Frame>();
@@ -228,14 +230,19 @@ namespace Replanetizer.Frames
                     }
                     if (ImGui.MenuItem("Model viewer"))
                     {
-                        if (selectedObjects.newestObject != null && selectedObjects.newestObject is ModelObject)
+                        if (modelFrame == null)
                         {
-                            ModelObject obj = (ModelObject) selectedObjects.newestObject;
-                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable, obj.model));
+                            modelFrame = new ModelFrame(wnd, this, shaderIDTable)
+                            {
+                                selection = selectedObjects
+                            };
+                            subFrames.Add(
+                                modelFrame
+                            );
                         }
                         else
                         {
-                            subFrames.Add(new ModelFrame(this.wnd, this, this.shaderIDTable));
+                            modelFrame.isOpen = true;
                         }
                     }
                     if (ImGui.MenuItem("Texture viewer"))
@@ -447,17 +454,17 @@ namespace Replanetizer.Frames
             var pos = viewport.Pos;
             var size = viewport.Size;
 
-            ImGui.SetNextWindowPos(pos);
-            ImGui.SetNextWindowSize(size);
+            //ImGui.SetNextWindowPos(pos);
+            //ImGui.SetNextWindowSize(size);
             ImGui.SetNextWindowViewport(viewport.ID);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 0);
 
             ImGui.Begin(frameName,
-                ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize |
-                ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
-                ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking);
+                ImGuiWindowFlags.NoCollapse | 
+                 ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
+                ImGuiWindowFlags.MenuBar );
 
             ImGui.PopStyleVar(2);
 
@@ -496,10 +503,12 @@ namespace Replanetizer.Frames
 
         private void RenderSubFrames(float deltaTime)
         {
-            subFrames.RemoveAll(FrameMustClose);
-            foreach (Frame levelSubFrame in subFrames)
+            foreach (Frame subFrame in subFrames)
             {
-                levelSubFrame.RenderAsWindow(deltaTime);
+                if (subFrame.isOpen)
+                {
+                    subFrame.RenderAsWindow(deltaTime);
+                }
             }
         }
 
